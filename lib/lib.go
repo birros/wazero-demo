@@ -20,7 +20,9 @@ func Start() {
 	defer cancel()
 
 	// Create a new WebAssembly Runtime.
-	runtime := wazero.NewRuntime(ctx)
+	runtime := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().
+		// Ensure a canceled context stops compiled wasm.
+		WithCloseOnContextDone(true))
 	defer runtime.Close(ctx) // This closes everything this Runtime created.
 
 	// sum.wasm was compiled with TinyGo, which requires being instantiated as a
@@ -31,7 +33,7 @@ func Start() {
 		log.Panicln(err)
 	}
 
-	module, err := runtime.InstantiateModuleFromBinary(ctx, sumWASMBytes)
+	module, err := runtime.Instantiate(ctx, sumWASMBytes)
 	if err != nil {
 		log.Panicln(err)
 	}
